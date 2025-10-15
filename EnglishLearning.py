@@ -85,14 +85,20 @@ def main():
             lang_options = ["english", "italian"]
             answer_lang = st.selectbox("Scegli la lingua della risposta:", lang_options, index=1 if source_lang == "english" else 0)
 
+            # Scelta ordine parole
+            order_options = ["Casuale", "Sequenziale"]
+            word_order = st.selectbox("Ordine delle parole:", order_options, index=0)
+
             # Inizializza sessione
             if 'current_idx' not in st.session_state:
-                st.session_state.current_idx = random.randint(0, len(words)-1)
+                st.session_state.current_idx = random.randint(0, len(words)-1) if word_order == "Casuale" else 0
                 st.session_state.show_answer = False
                 st.session_state.answer_result = None
                 st.session_state.score = 0
                 st.session_state.attempts = 0
                 st.session_state.input_key = 0
+                st.session_state.show_translation = False
+                st.session_state.word_order = word_order
 
             # Parola corrente
             current_word = words[st.session_state.current_idx]
@@ -120,6 +126,8 @@ def main():
             if user_answer:
                 is_correct = normalize_text(user_answer) in possible_answers
                 st.session_state.answer_result = "correct" if is_correct else "wrong"
+                if is_correct:
+                    st.session_state.show_translation = True
 
             # Mostra risultato
             if st.session_state.answer_result == "correct":
@@ -135,22 +143,31 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
 
-            # Mostra tutte le traduzioni
-            st.info(f"💡 Traduzione trovata: {translation}")
+            # Mostra traduzione solo se corretta o richiesta
+            if st.session_state.show_translation:
+                st.info(f"💡 Traduzione trovata: {translation}")
 
             # Pulsanti azione
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             with col1:
                 if st.button("➡️ Prossima Parola", key="next_btn"):
-                    st.session_state.current_idx = random.randint(0, len(words)-1)
+                    if word_order == "Casuale":
+                        st.session_state.current_idx = random.randint(0, len(words)-1)
+                    else:
+                        st.session_state.current_idx = (st.session_state.current_idx + 1) % len(words)
                     st.session_state.show_answer = False
                     st.session_state.answer_result = None
                     st.session_state.input_key += 1
+                    st.session_state.show_translation = False
                     st.rerun()
             with col2:
                 if st.button("🔄 Riprova", key="retry_btn"):
                     st.session_state.input_key += 1
                     st.session_state.answer_result = None
+                    st.rerun()
+            with col3:
+                if st.button("👁️ Mostra traduzione", key="show_btn"):
+                    st.session_state.show_translation = True
                     st.rerun()
 
         except Exception as e:
