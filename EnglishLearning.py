@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import random
 from deep_translator import GoogleTranslator
+from gtts import gTTS
+import io
 
 # Configurazione pagina per mobile
 st.set_page_config(
@@ -61,6 +63,20 @@ def normalize_text(text):
         return ""
     return text.strip().lower()
 
+def text_to_speech(text, lang):
+    """Genera audio dal testo usando gTTS"""
+    try:
+        # Determina il codice lingua per gTTS
+        lang_code = 'en' if lang == 'english' else 'it'
+        tts = gTTS(text=text, lang=lang_code, slow=False)
+        audio_bytes = io.BytesIO()
+        tts.write_to_fp(audio_bytes)
+        audio_bytes.seek(0)
+        return audio_bytes
+    except Exception as e:
+        st.error(f"Errore nella generazione audio: {e}")
+        return None
+
 def main():
     st.title("🎯 English Learning App")
 
@@ -108,6 +124,12 @@ def main():
                 <strong>{current_word}</strong>
             </div>
             """, unsafe_allow_html=True)
+            
+            # Pulsante per ascoltare la parola
+            if st.button("🔊 Ascolta", key="listen_btn"):
+                audio_bytes = text_to_speech(current_word, source_lang)
+                if audio_bytes:
+                    st.audio(audio_bytes, format='audio/mp3')
 
             # Scegli la lingua di destinazione
             dest_lang = "en" if answer_lang == "english" else "it"
