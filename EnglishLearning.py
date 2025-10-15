@@ -4,6 +4,7 @@ import random
 from deep_translator import GoogleTranslator
 from gtts import gTTS
 import io
+import os
 
 # Configurazione pagina per mobile
 st.set_page_config(
@@ -80,15 +81,32 @@ def text_to_speech(text, lang):
 def main():
     st.title("🎯 English Learning App")
 
+    # --- Selettore file dalla cartella Files ---
+    files_dir = "Files"
+    excel_files = [f for f in os.listdir(files_dir) if f.endswith(('.xlsx', '.xls'))]
+    selected_file = st.selectbox("📂 Scegli un file dalla cartella Files:", [""] + excel_files)
+
+    # --- Caricamento manuale ---
     uploaded_file = st.file_uploader(
         "📁 Carica il tuo file Excel",
         type=['xlsx', 'xls'],
         help="File con una colonna: prima riga la lingua, poi le parole"
     )
 
-    if uploaded_file is not None:
+    # --- Scegli il file da usare ---
+    file_to_use = None
+    if selected_file:
+        file_to_use = os.path.join(files_dir, selected_file)
+    elif uploaded_file is not None:
+        file_to_use = uploaded_file
+
+    if file_to_use:
         try:
-            df = pd.read_excel(uploaded_file, header=None)
+            # Se file_to_use è un path, apri con open; se è UploadedFile, passa direttamente
+            if isinstance(file_to_use, str):
+                df = pd.read_excel(file_to_use, header=None)
+            else:
+                df = pd.read_excel(file_to_use, header=None)
             if df.shape[1] != 1:
                 st.error("❌ Il file deve avere UNA sola colonna")
                 return
