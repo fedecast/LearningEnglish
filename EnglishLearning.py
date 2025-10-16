@@ -152,7 +152,11 @@ def main():
             # Scegli la lingua di destinazione
             dest_lang = "en" if answer_lang == "english" else "it"
             src_lang = "en" if source_lang == "english" else "it"
-            translation = GoogleTranslator(source=src_lang, target=dest_lang).translate(current_word)
+            try:
+                translation = GoogleTranslator(source=src_lang, target=dest_lang).translate(current_word)
+            except Exception as e:
+                st.warning(f"⚠️ Impossibile ottenere la traduzione online. Usa 'Mostra traduzione' per vedere la risposta corretta.")
+                translation = current_word  # Fallback
             possible_answers = [normalize_text(translation)]
 
             # Input utente
@@ -188,9 +192,20 @@ def main():
                 st.info(f"💡 Traduzione trovata: {translation}")
 
             # Pulsanti azione
-            col1, col2, col3 = st.columns(3)
+            col1, col2 = st.columns(2)
             with col1:
-                if st.button("➡️ Prossima Parola", key="next_btn"):
+                if st.button("⬅️ Precedente", key="prev_btn"):
+                    if word_order == "Casuale":
+                        st.session_state.current_idx = random.randint(0, len(words)-1)
+                    else:
+                        st.session_state.current_idx = (st.session_state.current_idx - 1) % len(words)
+                    st.session_state.show_answer = False
+                    st.session_state.answer_result = None
+                    st.session_state.input_key += 1
+                    st.session_state.show_translation = False
+                    st.rerun()
+            with col2:
+                if st.button("➡️ Prossima", key="next_btn"):
                     if word_order == "Casuale":
                         st.session_state.current_idx = random.randint(0, len(words)-1)
                     else:
@@ -200,14 +215,27 @@ def main():
                     st.session_state.input_key += 1
                     st.session_state.show_translation = False
                     st.rerun()
-            with col2:
+            
+            col3, col4, col5 = st.columns(3)
+            with col3:
                 if st.button("🔄 Riprova", key="retry_btn"):
                     st.session_state.input_key += 1
                     st.session_state.answer_result = None
                     st.rerun()
-            with col3:
+            with col4:
                 if st.button("👁️ Mostra traduzione", key="show_btn"):
                     st.session_state.show_translation = True
+                    st.rerun()
+            with col5:
+                if st.button("🔁 Reinizia", key="restart_btn"):
+                    if word_order == "Casuale":
+                        st.session_state.current_idx = random.randint(0, len(words)-1)
+                    else:
+                        st.session_state.current_idx = 0
+                    st.session_state.show_answer = False
+                    st.session_state.answer_result = None
+                    st.session_state.input_key += 1
+                    st.session_state.show_translation = False
                     st.rerun()
 
         except Exception as e:
