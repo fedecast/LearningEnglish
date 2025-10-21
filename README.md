@@ -31,6 +31,7 @@ Consulta il [CHANGELOG.md](CHANGELOG.md) per la lista completa delle funzionalit
 ## 📚 Documentazione
 
 - [CHANGELOG.md](CHANGELOG.md) - Release notes e cronologia delle versioni
+- [VERSIONING_GUIDE.md](VERSIONING_GUIDE.md) - Guida al versionamento per sviluppatori
 - [DEPLOYMENT.md](DEPLOYMENT.md) - Istruzioni per il deployment
 - [PROGRESS_SYSTEM.md](PROGRESS_SYSTEM.md) - Dettagli sul sistema di progresso
 
