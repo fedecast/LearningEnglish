@@ -5,6 +5,7 @@ from deep_translator import GoogleTranslator
 from gtts import gTTS
 import io
 import os
+from hybrid_progress_manager import HybridProgressManager
 
 # Configurazione pagina per mobile
 st.set_page_config(
@@ -34,6 +35,13 @@ st.markdown("""
         background-color: #f0f2f6;
         border-radius: 10px;
         margin: 20px 0;
+    }
+    .progress-stats {
+        background-color: #e8f4fd;
+        padding: 10px;
+        border-radius: 8px;
+        margin: 10px 0;
+        font-size: 14px;
     }
     .correct-answer {
         background-color: #d4edda;
@@ -123,6 +131,30 @@ def main():
             order_options = ["Casuale", "Sequenziale"]
             word_order = st.selectbox("Ordine delle parole:", order_options, index=0)
 
+            # Inizializza il gestore del progresso
+            if 'progress_manager' not in st.session_state or st.session_state.get('current_file') != selected_file:
+                file_name = selected_file if selected_file else "uploaded_file.xlsx"
+                st.session_state.progress_manager = HybridProgressManager(file_name)
+                st.session_state.current_file = selected_file
+
+            progress_manager = st.session_state.progress_manager
+
+            # Mostra info backend (solo per debug/info)
+            backend_info = progress_manager.get_backend_info()
+            with st.expander("ℹ️ Info Storage", expanded=False):
+                st.json(backend_info)
+
+            # Mostra statistiche generali
+            total_stats = progress_manager.get_total_stats()
+            if total_stats['total_attempts'] > 0:
+                st.markdown(f"""
+                <div class="progress-stats">
+                    📊 <strong>Statistiche:</strong> {total_stats['total_words_practiced']} parole praticate • 
+                    {total_stats['total_correct']} corrette • {total_stats['total_wrong']} errate • 
+                    Precisione: {total_stats['accuracy_percentage']}%
+                </div>
+                """, unsafe_allow_html=True)
+
             # Inizializza sessione
             if 'current_idx' not in st.session_state:
                 st.session_state.current_idx = random.randint(0, len(words)-1) if word_order == "Casuale" else 0
@@ -136,12 +168,24 @@ def main():
 
             # Parola corrente
             current_word = words[st.session_state.current_idx]
+            
+            # Ottieni statistiche per la parola corrente
+            correct_count, wrong_count = progress_manager.get_word_stats(current_word)
+            word_attempts = correct_count + wrong_count
 
             st.markdown(f"""
             <div class="word-display">
                 <strong>{current_word}</strong>
             </div>
             """, unsafe_allow_html=True)
+            
+            # Mostra statistiche della parola se ci sono tentativi precedenti
+            if word_attempts > 0:
+                st.markdown(f"""
+                <div class="progress-stats">
+                    📈 Questa parola: ✅ {correct_count} • ❌ {wrong_count} • Tentativi: {word_attempts}
+                </div>
+                """, unsafe_allow_html=True)
             
             # Pulsante per ascoltare la parola
             if st.button("🔊 Ascolta", key="listen_btn"):
@@ -170,6 +214,10 @@ def main():
             if user_answer:
                 is_correct = normalize_text(user_answer) in possible_answers
                 st.session_state.answer_result = "correct" if is_correct else "wrong"
+                
+                # Registra la risposta nel sistema di progresso
+                progress_manager.record_answer(current_word, is_correct)
+                
                 if is_correct:
                     st.session_state.show_translation = True
 
@@ -237,6 +285,37 @@ def main():
                     st.session_state.input_key += 1
                     st.session_state.show_translation = False
                     st.rerun()
+
+            # Sezione statistiche avanzate (in expander)
+            with st.expander("📊 Statistiche Avanzate"):
+                if total_stats['total_attempts'] > 0:
+                    col_stat1, col_stat2 = st.columns(2)
+                    
+                    with col_stat1:
+                        st.metric("Parole Praticate", total_stats['total_words_practiced'])
+                        st.metric("Risposte Corrette", total_stats['total_correct'])
+                    
+                    with col_stat2:
+                        st.metric("Risposte Errate", total_stats['total_wrong'])
+                        st.metric("Precisione", f"{total_stats['accuracy_percentage']}%")
+                    
+                    # Parole difficili
+                    difficult_words = progress_manager.get_difficult_words()
+                    if difficult_words:
+                        st.subheader("🔴 Parole da ripassare")
+                        for i, word_data in enumerate(difficult_words[:5]):  # Top 5
+                            error_rate = word_data['error_rate'] * 100
+                            st.write(f"{i+1}. **{word_data['word']}** - "
+                                   f"Errori: {error_rate:.1f}% "
+                                   f"({word_data['wrong']}/{word_data['correct']+word_data['wrong']})")
+                    
+                    # Pulsante reset progresso
+                    if st.button("🔄 Reset Progresso Completo", type="secondary"):
+                        progress_manager.reset_all_progress()
+                        st.success("Progresso resettato!")
+                        st.rerun()
+                else:
+                    st.info("Inizia a praticare per vedere le statistiche!")
 
         except Exception as e:
             st.error(f"❌ Errore nel caricamento: {e}")
