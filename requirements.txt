@@ -1,9 +1,8 @@
 streamlit
 pandas
 openpyxl
-googletrans==4.0.0rc1
 deep-translator
 gTTS
 
-# Database cloud (opzionale per deployment)
-supabase>=1.0.0
+# Database cloud (opzionale - installa solo se necessario)
+# supabase>=1.0.0

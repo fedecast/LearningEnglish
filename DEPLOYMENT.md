@@ -67,9 +67,40 @@ USING (user_id = current_setting('request.jwt.claims', true)::json->>'sub');
 - Dati persi al refresh
 - Sempre disponibile come ultima risorsa
 
-## Deployment:
+## Deployment (3 Opzioni):
 
-1. **Push del codice su GitHub**
-2. **Deploy su Streamlit Cloud**
-3. **Configura i secrets** (opzionale per database)
-4. **L'app funziona automaticamente!**
+### 🥉 **Opzione 1: Base (Sempre Funziona)**
+```bash
+# Usa requirements-base.txt
+# Solo Session State (temporaneo)
+```
+1. Push codice su GitHub
+2. Deploy su Streamlit Cloud 
+3. Cambia requirements file in "Advanced" → `requirements-base.txt`
+
+### 🥈 **Opzione 2: Standard (Raccomandato)**  
+```bash
+# Usa requirements.txt (default)
+# File locali + Session State fallback
+```
+1. Push codice su GitHub
+2. Deploy su Streamlit Cloud
+3. Funziona automaticamente!
+
+### 🥇 **Opzione 3: Premium (Con Database)**
+```bash
+# Usa requirements-cloud.txt 
+# Database persistente multi-utente
+```
+1. Crea account Supabase gratuito
+2. Configura database (SQL nel file)
+3. Push codice su GitHub
+4. Deploy su Streamlit Cloud
+5. Cambia requirements file → `requirements-cloud.txt`
+6. Aggiungi secrets Supabase
+
+## 🔧 Risoluzione Problemi:
+
+**Se vedi errori di dipendenze:**
+1. Prova `requirements-base.txt` 
+2. Funziona sempre, solo meno features

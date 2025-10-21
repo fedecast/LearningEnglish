@@ -8,12 +8,15 @@ import json
 from typing import Dict, Tuple, Optional
 import streamlit as st
 
-# Import condizionale per non bloccare l'app locale se non c'è supabase
+# Import condizionale per non bloccare l'app se non c'è supabase
 try:
     from supabase import create_client, Client
     SUPABASE_AVAILABLE = True
 except ImportError:
     SUPABASE_AVAILABLE = False
+    # Crea mock classes per evitare errori
+    class Client:
+        pass
 
 class DatabaseManager:
     def __init__(self, file_name: str, user_id: Optional[str] = None):

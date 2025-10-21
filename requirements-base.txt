@@ -1,0 +1,6 @@
+# Requirements minimi che funzionano sempre
+streamlit
+pandas
+openpyxl
+deep-translator
+gTTS

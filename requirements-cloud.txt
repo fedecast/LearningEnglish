@@ -1,0 +1,6 @@
+streamlit
+pandas
+openpyxl
+deep-translator
+gTTS
+supabase>=1.0.0
