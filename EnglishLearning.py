@@ -6,6 +6,7 @@ from gtts import gTTS
 import io
 import os
 from hybrid_progress_manager import HybridProgressManager
+from version import __version__
 
 # Configurazione pagina per mobile
 st.set_page_config(
@@ -88,6 +89,7 @@ def text_to_speech(text, lang):
 
 def main():
     st.title("🎯 English Learning App")
+    st.caption(f"Versione {__version__}")
 
     # --- Selettore file dalla cartella Files ---
     files_dir = "Files"
